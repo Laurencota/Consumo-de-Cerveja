@@ -1,0 +1,211 @@
+---
+title: "Consumo de cerveja"
+author: "Lauren Cota"
+date: "20/04/2021"
+output: html_document
+---
+
+
+
+
+**Importando o Banco dados**
+
+Banco de dados sobre o consumo de cerveja em uma cidade durante o ano de 2019:
+
+```{r}
+library(readxl)
+consumo_cerveja <- read_excel("C:/Users/laure/Downloads/consumo_cerveja.xlsx", 
+                              col_types = c("date", "numeric", "numeric", 
+                                            "numeric", "numeric", "text", "numeric"))
+```
+
+Agora que importamos o banco de dados, iremos visualizar para observar suas variáveis.
+
+```{r}
+head(consumo_cerveja)
+```
+
+
+Ao observarmos os dados existem perguntas que podem ser respondidas atráves dele, como:
+
+**NO FINAL DE SEMANA O CONSUMO DE CERVEJAS É MAIOR?**
+
+**COM TEMPERATURA MAIS ALTA, AS PESSOAS BEBEM MAIS CERVEJA?**
+
+**E COM TEMPERATURA MENOR, BEBEM MENOS?**
+
+**COM MAIOR PRECIPITAÇÃO, O CONSUMO DE CERVEJAS DIMINUI?**
+
+Atráves da análise dos dados, conseguiremos responder essas perguntas.
+
+
+**Análise Descritiva dos Dados**
+
+
+Para darmos início a descritiva, vamos obter o resumo dos dados:
+
+```{r}
+summary(consumo_cerveja)
+```
+
+Através do resumo, podemos observar uma inconsistência na variável Temperatura_Media, pois há um valor muito alto, e nem existe um valor alto como esse na Temperatura_Maxima.
+
+Com isso, o correto a se fazer é retirar esse valor do dados:
+
+```{r}
+consumo_cerveja$Temperatura_Media[consumo_cerveja$Temperatura_Media>36.5] <- NA
+```
+
+Acima foi colocado para retirar valores maiores que 36.5, pois esse é a temperatura maxima no banco de dados, que observamos na variável Temperatura_Maxima
+
+Novamente será pedido o resumo dos dados, para confirmar se houve a retirada do valor.
+
+```{r}
+summary(consumo_cerveja)
+```
+
+O valor foi retirado.
+
+## Gráficos
+
+Para iniciarmos com os gráficos iremos utilizar o pacote ggplot2
+
+
+```{r}
+library(ggplot2)
+library(ggthemes)
+library(gridExtra)
+cores<- colorRampPalette(c("#4fb6a7","#652177"))
+tema <- theme_hc()+ theme(axis.title.y = element_text(angle = 90,
+                                                      margin = margin(0.3, 0.5, 0.3, 0, "cm")),
+                          legend.position = "right",
+                          plot.margin = margin(0.3, 1, 0.3, 1, "cm"))
+
+theme_set(tema)
+
+```
+
+E também utilizamos o pacote ggthemes, onde é possível modificar o tema de fundo dos gráficos. E o pacote gridExtra, que será utilizado para mostrar mais de um gráfico na mesma saída.
+
+Primeiro será realizado um histograma somente com o consumo de cerveja na cidade:
+
+## Histograma - Consumo de Cerveja
+
+
+
+```{r}
+ggplot(consumo_cerveja, aes(x = Consumo_de_cerveja)) + geom_histogram(color = "white", fill = "#D7566CFF", bins = 10)+
+  labs(x = "Consumo de Cerveja",
+       y = "Frequência",
+       title = "Consumo de Cerveja na cidade em 2019")
+```
+
+No histograma notamos que os valores estão concentrados mais ao meio e a direita.
+
+
+## Gráficos de Dispersão
+
+
+
+
+```{r}
+a=ggplot(as.data.frame(consumo_cerveja), aes(Consumo_de_cerveja, Temperatura_Minima)) + geom_point(color = "#CF4C74FF", 
+                                                                size = 3.5, alpha = 0.5) + labs(x = "Consumo de Cerveja",
+                                                                 y = "Temperatura Mínima (C)",
+                                                                title = "Consumo de cerveja/Min")
+
+b=ggplot(as.data.frame(consumo_cerveja), aes(Consumo_de_cerveja, Temperatura_Media)) + geom_point(color = "#B52F8CFF", 
+                                                            size = 3.5, alpha = 0.5) + labs(x = "Consumo de Cerveja",
+                                                            y = "Temperatura Média (c)",
+                                                            title = "Consumo de cerveja/Med")
+
+c=ggplot(as.data.frame(consumo_cerveja), aes(Consumo_de_cerveja, Temperatura_Maxima)) + geom_point(color = "#7B02A8FF", 
+                                                size = 3.5, alpha = 0.5) + labs(x = "Consumo de Cerveja",
+                                                  y = "Temperatura Máxima (C)",
+                                                  title = "Consumo de Cerveja/Max")
+
+d =ggplot(as.data.frame(consumo_cerveja), aes(Consumo_de_cerveja, Precipitacao)) + geom_point(color = "#240691FF", 
+                                              size = 3.5, alpha = 0.5) + labs(x = "Consumo de Cerveja",
+                                                        y = "Precipitação (mm)",
+                                                    title = "Consumo de cerveja/Prec")
+
+grid.arrange(a, b, c, d, nrow = 2)
+
+```
+
+Acima temos 4 gráficos de dispersão, e podemos concluir o seguinte entre cada um deles:
+
+**Consumo de cervejas x Temperatura Mínima**
+
+Os dados estão mais dispersos, em relação aos outros gráficos
+
+**Consumo de cervejas x Temperatura Média**
+
+Os dados possuem certa linearidade, porém também estão um pouco dispersos
+
+**Consumo de cervejas x Temperatura Máxima**
+
+Entre os gráficos, é o que possui mais linearidade
+
+**Consumo de cervejas x Precipitação**
+
+Único gráfico que aparenta ter uma correlação negativa entre as duas variáveis.
+
+
+**Portanto, temos que nas temperaturas mais altas, o consumo de cerveja é maior, e nas temperaturas mais baixas, o consumo é mais variado, tendendo a ser mais baixo. E quando há chuvas, o consumo diminui.**
+
+Quanto mais alta for a temperatura <- maior consumo
+
+Quanto maior for a precipitação <- menor consumo
+
+
+## Box-Plot
+
+
+
+```{r}
+ggplot(consumo_cerveja, aes(as.factor(Final_de_Semana), Consumo_de_cerveja, fill = as.factor(Final_de_Semana))) + 
+  geom_boxplot(show.legend = F) +
+  labs(x = "Dia da semana/Fim de semana", 
+       y = "Consumo de Cerveja",
+       title = "Comparação Dia de Semana e Final de Semana") +
+  scale_fill_manual(values = cores(length(unique(consumo_cerveja$Final_de_Semana))))
+```
+
+
+Acima foi realizado o gráfico do box-plot, onde separamos final de semana (1) e dia de semana(0), para compararmos o consumo de cerveja.
+
+No gráfico podemos observar que aos finais de semana o consumo de cerveja é maior do que nos dias de semana.
+
+## Análise de Regressão
+
+
+Podemos realizar um modelo de análise de regressão simples com a variável Consumo de cerveja e precipitação, e realizar um plot junto com a reta do modelo, para observarmos se existe uma correlação negativa entre ambas.
+
+
+```{r}
+lmod = lm(Consumo_de_cerveja ~ Precipitacao, consumo_cerveja)
+plot(Consumo_de_cerveja ~ Precipitacao, consumo_cerveja)
+abline(lmod,lwd=2)
+```
+
+
+Realmente, temos uma correlação negativa entre as duas variáveis.
+
+
+## CONCLUSÕES
+
+**Através do banco de dados de consumo de cervejas em uma cidade, no ano de 2019, temos as seguintes conclusões, o consumo de cervejas aumenta quando há altas temperaturas, e se torna mais variado em temperaturas mais baixas.**
+
+**Nos finais de semana o consumo de cervejas é bem mais alto.**
+
+**Quando há maiores valores de precipitação, ou seja, mais chuvas, o consumo de bebidas diminui bastante.**
+
+
+
+
+
+
+
+
+
